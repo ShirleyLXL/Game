@@ -9,7 +9,7 @@ namespace Backend.Network
     {
         private void OnRecvFriendsList(IChannel channel, Message message)
         {
-            //前端发送一个带有userID的消息(因为只有userID,可以被更通用的消息代替)，后端从数据库将好友信息取出并作为消息发给前端
+            //前端发送一个带有userID的消息，后端从数据库将好友信息取出并作为消息发给前端
             CFriendsList request = message as CFriendsList;
             SFriendsList response = new SFriendsList();
             int userID = request.userID;     //为了方便debug，接受到的userID都是1
