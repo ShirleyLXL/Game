@@ -1,12 +1,28 @@
 using Common;
 using UnityEngine;
+using System.Collections;
+using UnityEngine.UI;
 
 namespace Gamekit3D.Network
 {
     public partial class Incoming
     {
+        public GameObject friendListContent;
+        Text friendNameText;
+        FriendUI handler;
         private void OnRecvFriendsList(IChannel channel, Message message)
         {
+            friendListContent = GameObject.Find("FriendListContent");
+            handler = friendListContent.GetComponent<FriendUI>();
+            
+            if (friendListContent == null || handler == null)
+            {
+                Debug.Log("content null");
+                return;
+            }
+            
+            //FGlobal存储前端的全局变量
+            FGlobal.friendList = new ArrayList();
             SFriendsList msg = message as SFriendsList;
             string friends_string = msg.friends_names;
             string[] friends_names = friends_string.Trim().Split(',');
@@ -14,10 +30,15 @@ namespace Gamekit3D.Network
                 if (names.Trim() == "") {
                     continue;
                 }
-                Debug.Log(names);
+                FGlobal.friendList.Add(names);
+                
+                //Debug.Log(names);
             }
-            
-            //TODO.... 可以调用UI里的函数创建一个个好友的item吗？...不会
+            //handler调用FriendUI中的方法
+            handler.AddFriendList();
+            foreach (string names in FGlobal.friendList) {
+                Debug.Log(names);    
+            }
 
 
         }
