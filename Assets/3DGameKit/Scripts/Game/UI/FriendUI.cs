@@ -4,23 +4,26 @@ using UnityEngine;
 using Gamekit3D;
 using Common;
 using Gamekit3D.Network;
+using UnityEngine.UI;
 
 public class FriendUI : MonoBehaviour
 {
     public GameObject FriendInfo;
+    public Text FriendName;
 
     private void Awake()
     {
-        FriendInfo.SetActive(false);
+        
+
     }
     // Use this for initialization
     void Start()
     {
+        FriendInfo.SetActive(false);
+        //发送消息给后端
         CFriendsList friendsList = new CFriendsList();
-        friendsList.userID = 1;
-        Client.Instance.Send(friendsList);    //只改了这里，在点开好友列表的时候发送一个消息给后端
-        Debug.Log("send");
-        Test();
+        friendsList.username = FGlobal.username;
+        Client.Instance.Send(friendsList);
     }
 
     private void OnEnable()
@@ -39,11 +42,16 @@ public class FriendUI : MonoBehaviour
 
     }
 
-    void Test()
+    public void AddFriendList()
     {
-        
-        for (int i = 0; i < 100; i++)
+        if (FGlobal.friendList == null)
         {
+            Debug.Log("friendList null");
+            return;
+        }
+
+        foreach (string names in FGlobal.friendList) {
+            FriendName.text = names;
             GameObject cloned = GameObject.Instantiate(FriendInfo);
             cloned.transform.SetParent(transform, false);
             cloned.SetActive(true);
