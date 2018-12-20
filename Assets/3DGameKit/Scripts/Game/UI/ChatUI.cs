@@ -10,22 +10,24 @@ using Gamekit3D.Network;
 
 public class ChatUI : MonoBehaviour
 {
+    //将聊天窗口信息都存入该结构体中
     struct chat_message {
         public GameObject chat_window;
         public ArrayList chat_my_message;
         public ArrayList chat_friend_message;
     }
+    //用好友名字获取聊天窗口信息
+    private Dictionary<string, chat_message> chat_windows = null;
+
     public GameObject messageView;
     public GameObject myMessage;
     public GameObject friendMessage;
-    //public GameObject cur_chatWindow;
+
     private chat_message cur_chatWindow;
     public Text cur_friendName;
-   // public string friendName_show;
-   // private Dictionary<string, GameObject> chat_windows = null;
-    private Dictionary<string, chat_message> chat_windows = null;
-    // private Dictionary<string, ArrayList> chat_my_message = null;
-    // private Dictionary<string, ArrayList> chat_friend_message = null;
+
+    
+
 
     // my message info content layout | ----------------- message text | image |
     // friend's info content layout   | image | message text ----------------- |
@@ -33,14 +35,13 @@ public class ChatUI : MonoBehaviour
 
     private void Awake()
     {
-       // messageView.SetActive(false);
         myMessage.SetActive(false);
         friendMessage.SetActive(false);
     }
     // Use this for initialization
     void Start()
     {
-        //Test();
+        
     }
 
     private void OnEnable()
@@ -59,24 +60,10 @@ public class ChatUI : MonoBehaviour
 
     }
 
+    //目前需要自己点开对应朋友的聊天窗口，此函数为当前聊天窗口收到消息。
     public void ReceiveFriendMessage(string name, string text)
     {
-        GameObject friendMessage111;
-        //if (cur_chatWindow == null) return;
-        //else
-        //{
-        //    friendMessage111 = cur_chatWindow.transform.Find("FriendMessageInfo").gameObject;
-        //}
-        //if (friendMessage111 == null)
-        //{ 
-        //    Debug.Log("friendMessage111 is null");
-        //    return;
-        //}
-        //if (name != cur_friendName.text) {
-        //    OnFriendInfoClick(cur_friendName);
-        //}
-        friendMessage111 = friendMessage;
-        GameObject cloned = GameObject.Instantiate(friendMessage111);
+        GameObject cloned = GameObject.Instantiate(friendMessage);
         if (cloned == null) return;
         cloned.SetActive(true);
         cur_chatWindow.chat_friend_message.Add(cloned);
@@ -85,38 +72,21 @@ public class ChatUI : MonoBehaviour
 
     public void SendMyMessage(string text)
     {
-        GameObject myMessage111;
-        //if (cur_chatWindow == null)
-        //{
-        //    return;
-        //}
-        //else {
-        //    myMessage111 = cur_chatWindow.transform.Find("MyMessageInfo").gameObject;
-        //}
-        //if (myMessage111 == null)
-        //{
-        //    Debug.Log("myMessage111 is null");
-        //    return;
-        //}
-            
-
-        myMessage111 = myMessage;
+        //发送消息给后端
         CChatMessage chatMsg = new CChatMessage();
-        //NetworkEntity entity = PlayerMyController.Instance.Entity;
-        //chatMsg.sender_entityId = entity.entityId;
         chatMsg.sender_userName = FGlobal.username;
         chatMsg.receiver_userName = cur_friendName.text;
         Debug.Log("current friend : " + cur_friendName.text);
         chatMsg.content = text;
         Client.Instance.Send(chatMsg);
         
-        GameObject cloned = GameObject.Instantiate(myMessage111);
+        //自己的窗口显示自己发的信息
+        GameObject cloned = GameObject.Instantiate(myMessage);
         if (cloned == null)
             return;
         cloned.SetActive(true);
         cur_chatWindow.chat_my_message.Add(cloned);
         AddElement(cloned, text);
-        //ReceiveFriendMessage("momo", text);
     }
 
     public void OnSendButtonClick(GameObject inputField)
@@ -134,20 +104,21 @@ public class ChatUI : MonoBehaviour
         input.text = "";
     }
 
+    //点击好友切换聊天窗口
     public void OnFriendInfoClick(Text FriendName)
     {
-        //messageView.SetActive(false);
-        //Destroy(messageView);
         Debug.Log("I receive the click");
         Debug.Log(FriendName.text);
         Debug.Log(cur_friendName.text);
+
+        //当前聊天窗口即为点击的好友，则直接返回
         if (FriendName.text == cur_friendName.text)
         {
             return;
         }
         if (chat_windows == null) chat_windows = new Dictionary<string, chat_message>();
-        //关闭当前窗口
 
+        //关闭当前聊天窗口
         if (chat_windows.ContainsKey(cur_friendName.text)) 
         {
             Debug.Log("prepare to set active false");
@@ -163,13 +134,9 @@ public class ChatUI : MonoBehaviour
             }
             Debug.Log("finish setting active false");
 
-            //GameObject allmymessage = cur_chatWindow.transform.Find("MyMessageInfo").gameObject;
-            //allmymessage.SetActive(false);
-            //GameObject allfriendmessage = cur_chatWindow.transform.Find("FriendMessageInfo").gameObject;
-            //allfriendmessage.SetActive(false);
-            //return;
         }
 
+        //如果对应好友的chat_window已经创建（即之前已经点开过了），则找到对应窗口和消息显示，并返回
         if (chat_windows.ContainsKey(FriendName.text))
         {
             chat_message msg = chat_windows[FriendName.text];
@@ -187,22 +154,13 @@ public class ChatUI : MonoBehaviour
             return;
         }
 
+        //创建新的chat_window
         cur_friendName.text = FriendName.text;
         GameObject cloned = GameObject.Instantiate(messageView);
         cur_chatWindow.chat_window = cloned;
         cur_chatWindow.chat_my_message = new ArrayList();
         cur_chatWindow.chat_friend_message = new ArrayList();
-        //使用GameObject.Find的话会找不到隐藏的物体
-        // GameObject name = cloned.transform.Find("MyMessageInfo").gameObject;
-
-        //for (int i = 0; i < cloned.transform.childCount; i++)
-        //{
-        //    GameObject go = cloned.transform.GetChild(i).gameObject;
-        //    Destroy(go);
-        //}
-       // cloned.transform.SetParent(transform, false);
         cloned.SetActive(true);
-       // name.SetActive(true);
         
         chat_windows.Add(FriendName.text, cur_chatWindow);
 
@@ -242,65 +200,5 @@ public class ChatUI : MonoBehaviour
         scrollRect.normalizedPosition = new Vector2(0, 0);
     }
 
-    void Test()
-    {
-        //AddNewMessage(true, "my message send");
-        //AddNewMessage(false, "friend message receive");
 
-        SendMyMessage("hello");
-        ReceiveFriendMessage("momo", "hello");
-    }
-
-    void Test2() {
-
-    }
-
-    /*
-    void AddNewMessage(bool mine, string message)
-    {
-        GameObject newContent = GameObject.Instantiate(content);
-        if (newContent == null)
-            return;
-        GameObject newImage = GameObject.Instantiate(image);
-        if (newImage == null)
-            return;
-        GameObject newText = GameObject.Instantiate(text);
-        if (newText == null)
-            return;
-
-        HorizontalLayoutGroup layout = newContent.GetComponent<HorizontalLayoutGroup>();
-        if (mine)
-            layout.childAlignment = TextAnchor.UpperRight;
-        else
-            layout.childAlignment = TextAnchor.UpperLeft;
-
-        TextMeshProUGUI textMesh = text.GetComponentInChildren<TextMeshProUGUI>();
-        if (textMesh == null)
-            return;
-
-        //float width = textMesh.GetPreferredValues().x; // get preferred width before assign text
-        textMesh.text = message;
-        RectTransform rectTransform = text.GetComponent<RectTransform>();
-        if (rectTransform == null)
-            return;
-
-        RectTransform viewRect = messageContent.GetComponent<RectTransform>();
-        if (viewRect == null)
-            return;
-
-        if (textMesh.preferredWidth < viewRect.rect.width)
-        {
-            ContentSizeFitter filter = textMesh.GetComponent<ContentSizeFitter>();
-            if (filter != null)
-            {
-                filter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-                rectTransform.sizeDelta = new Vector2(textMesh.preferredWidth, textMesh.preferredHeight);
-            }
-        }
-
-        newImage.transform.SetParent(newContent.transform, false);
-        newText.transform.SetParent(newContent.transform, false);
-        newContent.transform.SetParent(messageContent.transform, false);
-    }
-    */
 }
